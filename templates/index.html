@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第五人格錄影解析控制面板</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --primary-gradient: linear-gradient(135deg, #f472b6 0%, #fb7185 100%);
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --accent: #f472b6;
+        }
+
+        * {
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
+
+        body {
+            font-family: 'Inter', "Microsoft JhengHei", sans-serif;
+            margin: 0;
+            padding: 40px 20px;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(244, 114, 182, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(251, 113, 133, 0.1) 0px, transparent 50%);
+            color: var(--text-main);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 40px;
+            background: var(--primary-gradient);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        /* 佈局網格 */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        .card h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* 狀態樣式 */
+        .status-item {
+            margin-bottom: 16px;
+        }
+
+        .status-label {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .status-value {
+            font-weight: 500;
+            word-break: break-all;
+        }
+
+        #monitor-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #10b981;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 8px #10b981;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        /* 列表樣式 */
+        #recorded-games-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        #recorded-games-list li {
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            border-left: 3px solid var(--accent);
+        }
+
+        /* 表單樣式 */
+        .settings-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .settings-section {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        select {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: white;
+            font-size: 15px;
+            outline: none;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(244, 114, 182, 0.2);
+            background: rgba(15, 23, 42, 0.9);
+        }
+
+        button {
+            width: 100%;
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            box-shadow: 0 4px 15px rgba(244, 114, 182, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(244, 114, 182, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        /* 自定義滾動條 */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            margin-top: 40px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>第五錄影監控控制面板</h1>
+
+        <div class="dashboard-grid">
+            <div class="card status-card">
+                <h2>系統狀態</h2>
+                <div class="status-item">
+                    <span class="status-label">監控服務狀態</span>
+                    <span id="monitor-status" class="status-value">載入中...</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">監控目錄</span>
+                    <span id="monitor-path" class="status-value">未設定</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>近期紀錄</h2>
+                <ul id="recorded-games-list">
+                    <li>正在獲取資料...</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>設定與配置</h2>
+            <div class="settings-section">
+                <div class="form-group">
+                    <label for="record-dir">錄像位置</label>
+                    <input id="record-dir" type="text" value="{{ replay_path }}" placeholder="例如: C:\Games\IdentityV\Documents">
+                </div>
+                <div class="form-group">
+                    <label for="backend-url">後端網址</label>
+                    <input id="backend-url" type="text" value="" placeholder="https://idv-analyst-api.zalicsu.idv.tw">
+                </div>
+                <div class="form-group">
+                    <label for="backend-key">API Key</label>
+                    <input id="backend-key" type="password" value="" placeholder="輸入您的 api-key">
+                </div>
+                <div class="form-group">
+                    <label for="user-select">監看目標</label>
+                    <select id="user-select">
+                        <option>載入中...</option>
+                    </select>
+                </div>
+            </div>
+            <button onclick="update()">更新並儲存設定</button>
+        </div>
+        <div class="footer">&copy; 2026 Zalicsu. 版權所有 第五錄影監控控制面板</div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // 載入玩家清單的函式
+        function loadUserList(selectedUser = "") {
+            $.get("/user_list", function (data) {
+                let userSelect = $("#user-select");
+                userSelect.empty();
+                if (!data.users || data.users.length === 0) {
+                    userSelect.append('<option value="">路徑下無玩家資料夾</option>');
+                    return;
+                }
+                data.users.forEach(function (user) {
+                    let option = $("<option></option>").attr("value", user).text(user);
+                    if (user === selectedUser) option.attr("selected", true);
+                    userSelect.append(option);
+                });
+            });
+        }
+
+        $(document).ready(function () {
+            // 初始載入
+            loadUserList("{{ current_user }}");
+            fetchStatus();
+            setInterval(fetchStatus, 5000); // 每5秒更新一次狀態
+        });
+
+        // 輪詢系統狀態
+        function fetchStatus() {
+            $.get("/health_check", function (data) {
+                const statusHtml = data.is_monitoring 
+                    ? '<span class="pulse-dot"></span> 監控中' 
+                    : '<span class="pulse-dot" style="background-color: #ef4444; box-shadow: none; animation: none;"></span> 未監控';
+                $("#monitor-status").html(statusHtml);
+                $("#monitor-path").text(data.current_path || "無");
+            });
+
+            $.get("/recorded_games", function (data) {
+                let list = $("#recorded-games-list");
+                list.empty();
+                if (!data.recorded_games || data.recorded_games.length === 0) {
+                    list.append("<li>尚無已解析的遊戲</li>");
+                } else {
+                    data.recorded_games.forEach(function (timestamp) {
+                        let date = new Date(timestamp * 1000);
+                        list.append("<li>" + date.toLocaleString() + "</li>");
+                    });
+                }
+            });
+        }
+
+        function update() {
+            let payload = {
+                user: $("#user-select").val(),
+                record_path: $("#record-dir").val(),
+                backend_url: $("#backend-url").val(),
+                backend_key: $("#backend-key").val()
+            };
+
+            $.ajax({
+                url: "/update_settings",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(payload),
+                success: function (data) {
+                    alert(data.message);
+                    if (data.refresh_users) {
+                        loadUserList(payload.user); // 重新整理清單
+                    }
+                    fetchStatus();
+                },
+                error: function (xhr) {
+                    let errorMsg = xhr.responseJSON ? xhr.responseJSON.detail : "未知錯誤";
+                    alert("錯誤: " + errorMsg);
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>
