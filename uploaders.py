@@ -17,7 +17,7 @@ class BackendUploader(AbstractUploader):
             # 設定未完備則不上傳
             return
 
-        headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
+        headers = {"X-API-Key": key, "Content-Type": "application/json"}
         async with aiohttp.ClientSession() as session:
             async with session.post(url, json=data, headers=headers) as resp:
                 if resp.status != 200:
