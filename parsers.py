@@ -10,6 +10,8 @@ class IdentityVReplayParser(AbstractReplayParser):
         spec_info = self_res.get("spec_info", {})
         all_players = raw_data.get("all_player_result", [])
         base_info = self_res.get("base_info", {})
+        us_warm_info = base_info.get("us_warm_info", {})
+
         return {
             "game_info": {
                 "scene_id": raw_data.get("scene_id_copy"),
@@ -18,15 +20,21 @@ class IdentityVReplayParser(AbstractReplayParser):
                 "is_mvp": raw_data.get("is_mvp"),
                 "game_save_time": raw_data.get("game_save_time"),
                 "cipher_progress": spec_info.get("generator_status", []),
-                "room_guuid": raw_data.get("room_guuid")
+                "room_guuid": raw_data.get("room_guuid"),
+                "pid": base_info.get("pid"),
+                "character_ladder_score": us_warm_info.get("character_ladder_score"),
             },
             "players": [
                 {
-                    "uid": p.get("unique_id"), "player_name": p.get("player_name"), 
-                    "pid": p.get("pid"), "utype": p.get("utype"), 
-                    "res_type": p.get("res_type"), "is_self": p.get("is_self"), 
-                    "result": p.get("result"), "spec_info": p.get("spec_info", {})
-                } 
+                    "uid": p.get("unique_id"),
+                    "player_name": p.get("player_name"),
+                    "pid": p.get("pid"),
+                    "utype": p.get("utype"),
+                    "res_type": p.get("res_type"),
+                    "is_self": p.get("is_self"),
+                    "result": p.get("result"),
+                    "spec_info": p.get("spec_info", {}),
+                }
                 for p in all_players
-            ]
+            ],
         }
