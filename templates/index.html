@@ -269,7 +269,10 @@
                 </div>
                 <div class="form-group">
                     <label for="backend-url">後端網址</label>
-                    <input id="backend-url" type="text" value="" placeholder="https://idv-analyst-api.zalicsu.idv.tw">
+                    <input id="backend-url" type="text" value="" placeholder="https://idv-analyst-api.zalicsu.idv.tw 或 https://idv-analyst-api.zalicsu.idv.tw/api/v1/matches">
+                    <small style="display:block;margin-top:6px;color:var(--text-dim);line-height:1.5;">
+                        可填主機位址或完整上傳端點；系統會自動對齊到 <code>/api/v1/matches</code>。
+                    </small>
                 </div>
                 <div class="form-group">
                     <label for="backend-key">API Key</label>
