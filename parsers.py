@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 from typing import Dict, Any
 
 class AbstractReplayParser:
@@ -42,6 +43,36 @@ class IdentityVReplayParser(AbstractReplayParser):
         # 非 UUID（例如 24 位十六進位）時，轉成可重現 UUID
         return str(uuid.uuid5(uuid.NAMESPACE_URL, f"idv-room:{raw}"))
 
+    @staticmethod
+    def _normalize_game_save_time(value: Any) -> str | None:
+        if value is None:
+            return None
+
+        if isinstance(value, datetime):
+            return value.isoformat(timespec="seconds")
+
+        raw = str(value).strip()
+        if not raw:
+            return None
+
+        formats = (
+            "%Y_%m_%d_%H_%M_%S",
+            "%Y-%m-%d %H:%M:%S",
+            "%Y-%m-%dT%H:%M:%S",
+            "%Y-%m-%dT%H:%M:%S.%f",
+        )
+
+        for fmt in formats:
+            try:
+                return datetime.strptime(raw, fmt).isoformat(timespec="seconds")
+            except ValueError:
+                continue
+
+        try:
+            return datetime.fromisoformat(raw.replace("Z", "+00:00")).isoformat(timespec="seconds")
+        except ValueError:
+            return None
+
     def parse(self, raw_data: Dict[str, Any]) -> Dict[str, Any]:
         self_res = raw_data.get("self_result", {})
         spec_info = self_res.get("spec_info", {})
@@ -79,7 +110,7 @@ class IdentityVReplayParser(AbstractReplayParser):
             "kill_num": self._as_int(base_info.get("kill_num")),
             "utype": self._as_int(base_info.get("utype")),
             "pid": self_pid,
-            "game_save_time": raw_data.get("game_save_time"),
+            "game_save_time": self._normalize_game_save_time(raw_data.get("game_save_time")),
             "cipher_progress": self._normalize_cipher_progress(spec_info.get("generator_status")),
             "players": parsed_players,
             "ladder_score_info": ladder_score_info,

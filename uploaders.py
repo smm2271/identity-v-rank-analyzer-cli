@@ -26,6 +26,8 @@ class BackendUploader(AbstractUploader):
 
         if path.endswith("/api/v1/matches"):
             final_path = path
+        elif path.endswith("/v1/matches"):
+            final_path = "/api/v1/matches"
         elif path.endswith("/api/v1"):
             final_path = f"{path}/matches"
         elif path.endswith("/api"):
