@@ -6,8 +6,10 @@
 
 - 自動監控指定玩家錄影目錄（Watchdog）
 - 解析錄影 pickle 資料為可上傳 JSON
+- 將解析後的對局本地存放，方便後續重傳
 - 透過本機 Web 介面調整設定
 - 背景自動上傳至後端（使用 X-API-Key）
+- 同步面板可查看每筆對局的上傳狀態並重傳失敗項目
 
 ## 需求環境
 
@@ -35,6 +37,8 @@ python main.py
 2. 若 replay_path 無效，彈出資料夾選擇視窗
 3. 啟動本機 Web 服務（預設從 8050 往上找可用埠）
 4. 自動開啟瀏覽器設定頁面
+
+啟動後會先把解析成功的對局儲存在本機 `sync_records/`，接著自動嘗試上傳。若上傳失敗，紀錄會保留在同步面板中，之後可直接重傳。
 
 ## 設定檔
 
@@ -65,12 +69,20 @@ python main.py
 
 設定儲存後會即時切換監控目標。
 
+同步面板會顯示：
+
+- 目前本機儲存的對局紀錄
+- 每筆對局的狀態（已上傳、失敗、解析失敗、等待設定）
+- 最近一次失敗原因
+- 失敗項目的單筆重傳與全部重傳
+
 ## 上傳流程
 
 1. Watchdog 偵測到新檔 game_info.txt
 2. 讀取 pickle 並解析
-3. 非同步發送 POST 到 backend_url
-4. Header 帶入：
+3. 先將解析結果寫入本機 `sync_records/`
+4. 非同步發送 POST 到 backend_url
+5. Header 帶入：
 
 ```text
 X-API-Key: <backend_key>
@@ -91,6 +103,19 @@ Content-Type: application/json
 - `players[]`（`player_id`, `character_id`, `player_name`, `res_type`）
 - `ladder_score_info[]`（`pid`, `score`）
 
+## 同步狀態
+
+每筆對局都會以 JSON 形式保存到 `sync_records/`，常見狀態如下：
+
+- `pending`：已解析，等待或正在上傳
+- `uploading`：上傳進行中
+- `uploaded`：已成功送到後端
+- `failed`：上傳失敗，可重傳
+- `parse_failed`：解析失敗，可在修正解析邏輯後重試
+- `waiting_for_config`：尚未設定後端網址或 API Key
+
+本地 Web 面板的「重傳」按鈕會針對單筆紀錄重新上傳，若要一次處理失敗項目，可按「重傳全部失敗」。
+
 ## 常見問題
 
 ### 啟動後沒有偵測到錄影
@@ -104,6 +129,7 @@ Content-Type: application/json
 - 檢查 backend_url 是否可連線
 - 檢查 backend_key 是否正確且仍有效
 - 確認後端服務已啟動並接受 POST /api/v1/matches
+- 若同步面板顯示 `failed`，可直接按重傳按鈕再次嘗試
 
 ### 沒有彈出瀏覽器
 

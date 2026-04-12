@@ -86,6 +86,14 @@
             gap: 8px;
         }
 
+        .subtle-note {
+            margin-top: -8px;
+            margin-bottom: 16px;
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+
         /* 狀態樣式 */
         .status-item {
             margin-bottom: 16px;
@@ -125,22 +133,136 @@
             100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
         }
 
-        /* 列表樣式 */
-        #recorded-games-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            max-height: 200px;
-            overflow-y: auto;
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
         }
 
-        #recorded-games-list li {
-            padding: 10px 12px;
+        @media (max-width: 768px) {
+            .summary-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        .summary-item {
+            padding: 14px;
+            border-radius: 12px;
             background: rgba(255, 255, 255, 0.03);
-            border-radius: 8px;
-            margin-bottom: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .summary-label {
+            display: block;
+            color: var(--text-dim);
+            font-size: 0.78rem;
+            margin-bottom: 6px;
+        }
+
+        .summary-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .sync-toolbar {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .sync-toolbar .hint {
+            color: var(--text-dim);
+            font-size: 0.85rem;
+        }
+
+        .secondary-button {
+            width: auto;
+            margin-top: 0;
+            padding: 10px 14px;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: none;
+        }
+
+        .secondary-button:hover {
+            transform: translateY(-1px);
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .sync-table-wrap {
+            overflow-x: auto;
+        }
+
+        .sync-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 920px;
+        }
+
+        .sync-table th,
+        .sync-table td {
+            text-align: left;
+            padding: 12px 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            vertical-align: top;
             font-size: 0.9rem;
-            border-left: 3px solid var(--accent);
+        }
+
+        .sync-table th {
+            color: var(--text-dim);
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+
+        .status-uploaded {
+            background: rgba(16, 185, 129, 0.14);
+            color: #86efac;
+        }
+
+        .status-failed,
+        .status-parse_failed {
+            background: rgba(239, 68, 68, 0.14);
+            color: #fca5a5;
+        }
+
+        .status-pending,
+        .status-uploading {
+            background: rgba(59, 130, 246, 0.14);
+            color: #93c5fd;
+        }
+
+        .status-waiting_for_config {
+            background: rgba(245, 158, 11, 0.14);
+            color: #fcd34d;
+        }
+
+        .record-error {
+            color: #fda4af;
+            font-size: 0.8rem;
+            line-height: 1.5;
+            word-break: break-word;
+        }
+
+        .action-cell button {
+            width: auto;
+            margin-top: 0;
+            padding: 8px 12px;
+            font-size: 13px;
         }
 
         /* 表單樣式 */
@@ -250,13 +372,43 @@
                     <span class="status-label">監控目錄</span>
                     <span id="monitor-path" class="status-value">未設定</span>
                 </div>
+                <div class="status-item">
+                    <span class="status-label">本地同步存放</span>
+                    <span id="sync-store-path" class="status-value">載入中...</span>
+                </div>
             </div>
 
             <div class="card">
-                <h2>近期紀錄</h2>
-                <ul id="recorded-games-list">
-                    <li>正在獲取資料...</li>
-                </ul>
+                <h2>同步紀錄</h2>
+                <div class="subtle-note">解析後的對局會先保存在本機，成功上傳與失敗項目都會列在這裡，可直接重傳失敗的對局。</div>
+                <div class="summary-grid">
+                    <div class="summary-item"><span class="summary-label">總數</span><span id="summary-total" class="summary-value">0</span></div>
+                    <div class="summary-item"><span class="summary-label">已上傳</span><span id="summary-uploaded" class="summary-value">0</span></div>
+                    <div class="summary-item"><span class="summary-label">失敗</span><span id="summary-failed" class="summary-value">0</span></div>
+                    <div class="summary-item"><span class="summary-label">待處理</span><span id="summary-pending" class="summary-value">0</span></div>
+                </div>
+                <div class="sync-toolbar">
+                    <span class="hint">最新紀錄會顯示在上方；失敗或等待設定的項目可手動重傳。</span>
+                    <button class="secondary-button" type="button" onclick="retryAllFailed()">重傳全部失敗</button>
+                </div>
+                <div class="sync-table-wrap">
+                    <table class="sync-table">
+                        <thead>
+                            <tr>
+                                <th>建立時間</th>
+                                <th>對局時間</th>
+                                <th>來源</th>
+                                <th>狀態</th>
+                                <th>嘗試</th>
+                                <th>最近錯誤</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sync-records-body">
+                            <tr><td colspan="7">正在獲取資料...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -309,11 +461,90 @@
             });
         }
 
+        function formatTime(value) {
+            if (!value) return "-";
+            const parsed = new Date(value);
+            if (Number.isNaN(parsed.getTime())) return String(value);
+            return parsed.toLocaleString("zh-TW");
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? "")
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#39;");
+        }
+
+        function statusText(status) {
+            const labels = {
+                uploaded: "已上傳",
+                failed: "失敗",
+                parse_failed: "解析失敗",
+                pending: "待上傳",
+                uploading: "上傳中",
+                waiting_for_config: "等待設定",
+            };
+            return labels[status] || status || "未知";
+        }
+
+        function renderSyncRecords(records) {
+            const tbody = $("#sync-records-body");
+            tbody.empty();
+
+            if (!records || records.length === 0) {
+                tbody.append('<tr><td colspan="7">尚無同步紀錄</td></tr>');
+                return;
+            }
+
+            records.forEach(function (record) {
+                const statusClass = `status-${record.status || "pending"}`;
+                const retryButton = record.retryable
+                    ? `<button type="button" class="secondary-button" onclick="retryRecord('${record.id}')">重傳</button>`
+                    : "-";
+                const errorText = record.last_error ? `<div class="record-error">${escapeHtml(record.last_error)}</div>` : "-";
+                const roomShort = record.room_guuid ? escapeHtml(String(record.room_guuid).slice(0, 8)) : "-";
+
+                tbody.append(`
+                    <tr>
+                        <td>${formatTime(record.created_at)}</td>
+                        <td>${formatTime(record.game_save_time)}</td>
+                        <td>
+                            <div>${escapeHtml(record.source_name || "-")}</div>
+                            <div style="color: var(--text-dim); font-size: 0.8rem; margin-top: 4px;">${roomShort}</div>
+                        </td>
+                        <td><span class="status-pill ${statusClass}">${statusText(record.status)}</span></td>
+                        <td>${record.attempts || 0}</td>
+                        <td>${errorText}</td>
+                        <td class="action-cell">${retryButton}</td>
+                    </tr>
+                `);
+            });
+        }
+
+        function updateSummary(summary) {
+            $("#summary-total").text(summary?.total ?? 0);
+            $("#summary-uploaded").text(summary?.uploaded ?? 0);
+            $("#summary-failed").text((summary?.failed ?? 0) + (summary?.parse_failed ?? 0));
+            $("#summary-pending").text((summary?.pending ?? 0) + (summary?.uploading ?? 0) + (summary?.waiting_for_config ?? 0));
+        }
+
+        function loadSyncRecords() {
+            $.get("/sync_records", function (data) {
+                updateSummary(data.summary);
+                renderSyncRecords(data.records);
+                $("#sync-store-path").text(data.storage_dir || "未設定");
+            });
+        }
+
         $(document).ready(function () {
             // 初始載入
             loadUserList("{{ current_user }}");
             fetchStatus();
             setInterval(fetchStatus, 5000); // 每5秒更新一次狀態
+            loadSyncRecords();
+            setInterval(loadSyncRecords, 5000);
         });
 
         // 輪詢系統狀態
@@ -324,18 +555,38 @@
                     : '<span class="pulse-dot" style="background-color: #ef4444; box-shadow: none; animation: none;"></span> 未監控';
                 $("#monitor-status").html(statusHtml);
                 $("#monitor-path").text(data.current_path || "無");
+                if (data.sync_summary) {
+                    updateSummary(data.sync_summary);
+                }
             });
+        }
 
-            $.get("/recorded_games", function (data) {
-                let list = $("#recorded-games-list");
-                list.empty();
-                if (!data.recorded_games || data.recorded_games.length === 0) {
-                    list.append("<li>尚無已解析的遊戲</li>");
-                } else {
-                    data.recorded_games.forEach(function (timestamp) {
-                        let date = new Date(timestamp * 1000);
-                        list.append("<li>" + date.toLocaleString() + "</li>");
-                    });
+        function retryRecord(recordId) {
+            $.ajax({
+                url: `/sync_records/${recordId}/retry`,
+                type: "POST",
+                success: function (data) {
+                    alert(data.message);
+                    loadSyncRecords();
+                },
+                error: function (xhr) {
+                    let errorMsg = xhr.responseJSON ? xhr.responseJSON.detail : "未知錯誤";
+                    alert("錯誤: " + errorMsg);
+                }
+            });
+        }
+
+        function retryAllFailed() {
+            $.ajax({
+                url: "/sync_records/retry_failed",
+                type: "POST",
+                success: function (data) {
+                    alert(data.message);
+                    loadSyncRecords();
+                },
+                error: function (xhr) {
+                    let errorMsg = xhr.responseJSON ? xhr.responseJSON.detail : "未知錯誤";
+                    alert("錯誤: " + errorMsg);
                 }
             });
         }
@@ -359,6 +610,7 @@
                         loadUserList(payload.user); // 重新整理清單
                     }
                     fetchStatus();
+                    loadSyncRecords();
                 },
                 error: function (xhr) {
                     let errorMsg = xhr.responseJSON ? xhr.responseJSON.detail : "未知錯誤";

@@ -5,8 +5,9 @@ from fastapi.templating import Jinja2Templates
 
 from config import ConfigManager
 from monitor import ReplayMonitorManager
+from sync_manager import SyncManager
 
-def create_app(config: ConfigManager, monitor: ReplayMonitorManager) -> FastAPI:
+def create_app(config: ConfigManager, monitor: ReplayMonitorManager, sync_manager: SyncManager) -> FastAPI:
     app = FastAPI()
     templates = Jinja2Templates(directory="templates")
 
@@ -55,16 +56,37 @@ def create_app(config: ConfigManager, monitor: ReplayMonitorManager) -> FastAPI:
         
         return {"message": "設定已儲存", "refresh": True}
 
+    @app.get("/sync_records")
+    async def get_sync_records():
+        return {
+            "records": sync_manager.list_records(),
+            "summary": sync_manager.summary(),
+            "storage_dir": sync_manager.storage_dir,
+        }
+
     @app.get("/recorded_games")
     async def get_recorded_games():
         return {"recorded_games": monitor.record_games}
+
+    @app.post("/sync_records/{record_id}/retry")
+    async def retry_sync_record(record_id: str):
+        record = sync_manager.retry_record(record_id)
+        if record is None:
+            raise HTTPException(status_code=404, detail="找不到同步紀錄")
+        return {"message": "已排程重傳", "record_id": record_id}
+
+    @app.post("/sync_records/retry_failed")
+    async def retry_failed_sync_records():
+        count = sync_manager.retry_failed_records()
+        return {"message": f"已排程重傳 {count} 筆失敗紀錄", "count": count}
 
     @app.get("/health_check")
     async def health_check():
         return {
             "status": "ok", 
             "is_monitoring": monitor.is_alive(), 
-            "current_path": f"{config.get('replay_path')}/{monitor.current_user}"
+            "current_path": f"{config.get('replay_path')}/{monitor.current_user}",
+            "sync_summary": sync_manager.summary(),
         }
 
     return app

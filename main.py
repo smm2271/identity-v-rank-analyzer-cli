@@ -11,6 +11,7 @@ from config import ConfigManager
 from parsers import IdentityVReplayParser
 from uploaders import BackendUploader
 from monitor import ReplayMonitorManager
+from sync_manager import SyncManager
 from api import create_app
 
 def find_free_port(start_port: int = 8000, max_tries: int = 100) -> int:
@@ -36,7 +37,8 @@ def main():
     config = ConfigManager()
     parser = IdentityVReplayParser()
     uploader = BackendUploader(config)
-    monitor = ReplayMonitorManager(parser, uploader)
+    sync_manager = SyncManager(config, parser, uploader)
+    monitor = ReplayMonitorManager(sync_manager)
     
     # 處理初次設定路徑
     replay_path = config.get("replay_path")
@@ -54,7 +56,7 @@ def main():
         monitor.start(os.path.join(replay_path, last_user), last_user)
 
     # 創造 FastAPI 實例並啟動 Web 伺服器
-    app = create_app(config, monitor)
+    app = create_app(config, monitor, sync_manager)
     running_port = find_free_port(8050)
     api_url = f"http://127.0.0.1:{running_port}"
 
